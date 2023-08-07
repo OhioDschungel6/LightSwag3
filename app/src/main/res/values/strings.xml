@@ -1,0 +1,13 @@
+<resources>
+    <string name="app_name">LightSwag3</string>
+    <!-- Settings Activity Title -->
+    <string name="title_activity_settings">SettingsActivity</string>
+
+    <!-- Preference Titles -->
+    <string name="dns_header">DNS Settings</string>
+
+    <!-- Messages Preferences -->
+    <string name="server_address_title">Server address</string>
+    <string name="reply_title">Default reply action</string>
+
+</resources>
