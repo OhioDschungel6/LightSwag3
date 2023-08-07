@@ -7,16 +7,20 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Button
 import android.widget.ListView
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import java.io.BufferedReader
-import java.io.InputStreamReader
-import java.net.HttpURLConnection
-import java.net.URL
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import okhttp3.OkHttpClient
+import okhttp3.Request
 
 
 private var buttonNames = arrayOf<String?>("1", "2", "3", "4", "5", "6", "7")
 
 class ButtonsActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.buttons_activity)
@@ -29,6 +33,9 @@ class ButtonsActivity : AppCompatActivity() {
             button.setText(buttonNames.get(i))
             button.setOnClickListener { v: View? ->
                 Log.i("Button"+i, "Button " + buttonNames.get(i) + " was pressed.")
+                GlobalScope.launch(Dispatchers.IO) {
+                    sendHttpGetRequest(i)
+                }
             }
             buttons[i] = button
         }
@@ -42,22 +49,24 @@ class ButtonsActivity : AppCompatActivity() {
 
     }
 
-    fun sendHttpRequest(urlString: String): String {
-        val url = URL(urlString)
-        val connection = url.openConnection() as HttpURLConnection
+    fun sendHttpGetRequest(id: Int) {
+        val client = OkHttpClient()
+        val baseUrl = getSharedPreferences("TODO", MODE_PRIVATE)
+            .getString("dns","http://SwagBox3")
+        val request = Request.Builder()
+            .url("$baseUrl/buttons/$id")
+            .build()
 
-        try {
-            val reader = BufferedReader(InputStreamReader(connection.inputStream))
-            val response = StringBuilder()
-            var line: String?
-
-            while (reader.readLine().also { line = it } != null) {
-                response.append(line)
+        client.newCall(request).execute().use { response ->
+            GlobalScope.launch(Dispatchers.Main) {
+                if (response.isSuccessful) {
+                    Toast.makeText(this@ButtonsActivity, "Song started", Toast.LENGTH_SHORT)
+                        .show()
+                } else {
+                    Toast.makeText(this@ButtonsActivity, "Unexpected error. URL no available.", Toast.LENGTH_SHORT)
+                        .show()
+                }
             }
-
-            return response.toString()
-        } finally {
-            connection.disconnect()
         }
     }
 }
